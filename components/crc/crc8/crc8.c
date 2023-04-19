@@ -1,7 +1,18 @@
+/**
+ * @file crc8.c
+ * @brief Cyclic Redundancy Check (CRC8)
+ * @copyright Copyright (c) 2023
+ *
+ * Change Logs:
+ * Data             Author                          Notes
+ * 2023-04-19       vector(vector_qiu@163.com)      first version
+ *
+ */
 #include "crc8.h"
+#include <assert.h>
 
-/*TODO: CRC8_8BIT_ITU_TABLE CRC8_8BIT_ROHC_TABLE 查表法有问题*/
-
+/* 对于有初始crc值和结果异或处理的参考模型要生成多张table，这里不做实现 */
+/* 低空间占用可以使用4BIT table查表 */
 /* http://www.dwenzhao.cn/cal/mcu/crc8array.html */
 /* Reference Model:CRC8 */
 static const uint8_t CRC8_8BIT_TABLE[256] = {
@@ -23,46 +34,6 @@ static const uint8_t CRC8_8BIT_TABLE[256] = {
     0xDE, 0xD9, 0xD0, 0xD7, 0xC2, 0xC5, 0xCC, 0xCB, 0xE6, 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3
 };
 
-/* Reference Model:CRC8_ITU */
-static const uint8_t CRC8_8BIT_ITU_TABLE[256] = {
-    0x55, 0x52, 0x5B, 0x5C, 0x49, 0x4E, 0x47, 0x40, 0x6D, 0x6A, 0x63, 0x64, 0x71, 0x76, 0x7F, 0x78,
-    0x25, 0x22, 0x2B, 0x2C, 0x39, 0x3E, 0x37, 0x30, 0x1D, 0x1A, 0x13, 0x14, 0x01, 0x06, 0x0F, 0x08,
-    0xB5, 0xB2, 0xBB, 0xBC, 0xA9, 0xAE, 0xA7, 0xA0, 0x8D, 0x8A, 0x83, 0x84, 0x91, 0x96, 0x9F, 0x98,
-    0xC5, 0xC2, 0xCB, 0xCC, 0xD9, 0xDE, 0xD7, 0xD0, 0xFD, 0xFA, 0xF3, 0xF4, 0xE1, 0xE6, 0xEF, 0xE8,
-    0x92, 0x95, 0x9C, 0x9B, 0x8E, 0x89, 0x80, 0x87, 0xAA, 0xAD, 0xA4, 0xA3, 0xB6, 0xB1, 0xB8, 0xBF,
-    0xE2, 0xE5, 0xEC, 0xEB, 0xFE, 0xF9, 0xF0, 0xF7, 0xDA, 0xDD, 0xD4, 0xD3, 0xC6, 0xC1, 0xC8, 0xCF,
-    0x72, 0x75, 0x7C, 0x7B, 0x6E, 0x69, 0x60, 0x67, 0x4A, 0x4D, 0x44, 0x43, 0x56, 0x51, 0x58, 0x5F,
-    0x02, 0x05, 0x0C, 0x0B, 0x1E, 0x19, 0x10, 0x17, 0x3A, 0x3D, 0x34, 0x33, 0x26, 0x21, 0x28, 0x2F,
-    0xDC, 0xDB, 0xD2, 0xD5, 0xC0, 0xC7, 0xCE, 0xC9, 0xE4, 0xE3, 0xEA, 0xED, 0xF8, 0xFF, 0xF6, 0xF1,
-    0xAC, 0xAB, 0xA2, 0xA5, 0xB0, 0xB7, 0xBE, 0xB9, 0x94, 0x93, 0x9A, 0x9D, 0x88, 0x8F, 0x86, 0x81,
-    0x3C, 0x3B, 0x32, 0x35, 0x20, 0x27, 0x2E, 0x29, 0x04, 0x03, 0x0A, 0x0D, 0x18, 0x1F, 0x16, 0x11,
-    0x4C, 0x4B, 0x42, 0x45, 0x50, 0x57, 0x5E, 0x59, 0x74, 0x73, 0x7A, 0x7D, 0x68, 0x6F, 0x66, 0x61,
-    0x1B, 0x1C, 0x15, 0x12, 0x07, 0x00, 0x09, 0x0E, 0x23, 0x24, 0x2D, 0x2A, 0x3F, 0x38, 0x31, 0x36,
-    0x6B, 0x6C, 0x65, 0x62, 0x77, 0x70, 0x79, 0x7E, 0x53, 0x54, 0x5D, 0x5A, 0x4F, 0x48, 0x41, 0x46,
-    0xFB, 0xFC, 0xF5, 0xF2, 0xE7, 0xE0, 0xE9, 0xEE, 0xC3, 0xC4, 0xCD, 0xCA, 0xDF, 0xD8, 0xD1, 0xD6,
-    0x8B, 0x8C, 0x85, 0x82, 0x97, 0x90, 0x99, 0x9E, 0xB3, 0xB4, 0xBD, 0xBA, 0xAF, 0xA8, 0xA1, 0xA6
-};
-
-/* Reference Model:CRC8_ROHC */
-static const uint8_t CRC8_8BIT_ROHC_TABLE[256] = {
-    0xCF, 0x5E, 0x2C, 0xBD, 0xC8, 0x59, 0x2B, 0xBA, 0xC1, 0x50, 0x22, 0xB3, 0xC6, 0x57, 0x25, 0xB4,
-    0xD3, 0x42, 0x30, 0xA1, 0xD4, 0x45, 0x37, 0xA6, 0xDD, 0x4C, 0x3E, 0xAF, 0xDA, 0x4B, 0x39, 0xA8,
-    0xF7, 0x66, 0x14, 0x85, 0xF0, 0x61, 0x13, 0x82, 0xF9, 0x68, 0x1A, 0x8B, 0xFE, 0x6F, 0x1D, 0x8C,
-    0xEB, 0x7A, 0x08, 0x99, 0xEC, 0x7D, 0x0F, 0x9E, 0xE5, 0x74, 0x06, 0x97, 0xE2, 0x73, 0x01, 0x90,
-    0xBF, 0x2E, 0x5C, 0xCD, 0xB8, 0x29, 0x5B, 0xCA, 0xB1, 0x20, 0x52, 0xC3, 0xB6, 0x27, 0x55, 0xC4,
-    0xA3, 0x32, 0x40, 0xD1, 0xA4, 0x35, 0x47, 0xD6, 0xAD, 0x3C, 0x4E, 0xDF, 0xAA, 0x3B, 0x49, 0xD8,
-    0x87, 0x16, 0x64, 0xF5, 0x80, 0x11, 0x63, 0xF2, 0x89, 0x18, 0x6A, 0xFB, 0x8E, 0x1F, 0x6D, 0xFC,
-    0x9B, 0x0A, 0x78, 0xE9, 0x9C, 0x0D, 0x7F, 0xEE, 0x95, 0x04, 0x76, 0xE7, 0x92, 0x03, 0x71, 0xE0,
-    0x2F, 0xBE, 0xCC, 0x5D, 0x28, 0xB9, 0xCB, 0x5A, 0x21, 0xB0, 0xC2, 0x53, 0x26, 0xB7, 0xC5, 0x54,
-    0x33, 0xA2, 0xD0, 0x41, 0x34, 0xA5, 0xD7, 0x46, 0x3D, 0xAC, 0xDE, 0x4F, 0x3A, 0xAB, 0xD9, 0x48,
-    0x17, 0x86, 0xF4, 0x65, 0x10, 0x81, 0xF3, 0x62, 0x19, 0x88, 0xFA, 0x6B, 0x1E, 0x8F, 0xFD, 0x6C,
-    0x0B, 0x9A, 0xE8, 0x79, 0x0C, 0x9D, 0xEF, 0x7E, 0x05, 0x94, 0xE6, 0x77, 0x02, 0x93, 0xE1, 0x70,
-    0x5F, 0xCE, 0xBC, 0x2D, 0x58, 0xC9, 0xBB, 0x2A, 0x51, 0xC0, 0xB2, 0x23, 0x56, 0xC7, 0xB5, 0x24,
-    0x43, 0xD2, 0xA0, 0x31, 0x44, 0xD5, 0xA7, 0x36, 0x4D, 0xDC, 0xAE, 0x3F, 0x4A, 0xDB, 0xA9, 0x38,
-    0x67, 0xF6, 0x84, 0x15, 0x60, 0xF1, 0x83, 0x12, 0x69, 0xF8, 0x8A, 0x1B, 0x6E, 0xFF, 0x8D, 0x1C,
-    0x7B, 0xEA, 0x98, 0x09, 0x7C, 0xED, 0x9F, 0x0E, 0x75, 0xE4, 0x96, 0x07, 0x72, 0xE3, 0x91, 0x00
-};
-
 /* Reference Model:CRC8_MAXIM */
 static const uint8_t CRC8_8BIT_MAXIM_TABLE[256] = {
     0x00, 0x5E, 0xBC, 0xE2, 0x61, 0x3F, 0xDD, 0x83, 0xC2, 0x9C, 0x7E, 0x20, 0xA3, 0xFD, 0x1F, 0x41,
@@ -81,6 +52,22 @@ static const uint8_t CRC8_8BIT_MAXIM_TABLE[256] = {
     0x57, 0x09, 0xEB, 0xB5, 0x36, 0x68, 0x8A, 0xD4, 0x95, 0xCB, 0x29, 0x77, 0xF4, 0xAA, 0x48, 0x16,
     0xE9, 0xB7, 0x55, 0x0B, 0x88, 0xD6, 0x34, 0x6A, 0x2B, 0x75, 0x97, 0xC9, 0x4A, 0x14, 0xF6, 0xA8,
     0x74, 0x2A, 0xC8, 0x96, 0x15, 0x4B, 0xA9, 0xF7, 0xB6, 0xE8, 0x0A, 0x54, 0xD7, 0x89, 0x6B, 0x35
+};
+
+/* http://www.ip33.com/crc.html */
+/* polynomial discard MSB or LSB because they are always 1 */
+typedef struct {
+    uint8_t initial_value;
+    uint8_t result_xor_value;
+    uint8_t polynomial;
+    bool input_inversion;
+    bool output_inversion;
+} crc8_param_t;
+static crc8_param_t crc8_param[] = {
+    {0x00, 0x00, 0x07, false, false},       // Reference Model:CRC8
+    {0x00, 0x55, 0x07, false, false},       // Reference Model:CRC8_ITU
+    {0xFF, 0x00, 0x07, true, true},         // Reference Model:CRC8_ROHC
+    {0x00, 0x00, 0x31, true, true},         // Reference Model:CRC8_MAXIM
 };
 
 /**
@@ -106,14 +93,19 @@ static uint8_t data_inversion(uint8_t data) {
  * @param length Input uint8 t type array length
  * @return uint8_t CRC8 result
  */
-uint8_t crc8_calculate(const crc8_param_t *param, uint8_t *input_data, size_t length) {
-    uint8_t crc8 = param->initial_value;
-    uint8_t polynomial = param->polynomial;
+uint8_t crc8_calculate(CRC8_reference_model_e model, uint8_t *input_data, size_t length) {
+    /* parameter checkout */
+    assert(model < CRC8_NONE_MODEL);
+    assert(input_data != NULL);
+    assert(length > 0);
+
+    uint8_t crc8 = crc8_param[model].initial_value;
+    uint8_t polynomial = crc8_param[model].polynomial;
     uint8_t data;
 
     for (size_t i = 0; i < length; i++) {
         data = *input_data++;
-        if (param->input_inversion) {
+        if (crc8_param[model].input_inversion) {
             data = data_inversion(data);
         }
         crc8 ^= data;
@@ -128,11 +120,11 @@ uint8_t crc8_calculate(const crc8_param_t *param, uint8_t *input_data, size_t le
         }
     }
 
-    if (param->output_inversion) {
+    if (crc8_param[model].output_inversion) {
         crc8 = data_inversion(crc8);
     }
 
-    return (crc8 ^ param->result_xor_value);
+    return (crc8 ^ crc8_param[model].result_xor_value);
 }
 
 /**
@@ -142,9 +134,14 @@ uint8_t crc8_calculate(const crc8_param_t *param, uint8_t *input_data, size_t le
  * @param input_data Packets of CRC8 to be computed, last byte of the array holds the CRC8 result
  * @param length Length of the CRC8 packet
  */
-void crc8_calculate_package(const crc8_param_t *param, uint8_t *input_data, size_t length) {
+void crc8_calculate_package(CRC8_reference_model_e model, uint8_t *input_data, size_t length) {
+    /* parameter checkout */
+    assert(model < CRC8_NONE_MODEL);
+    assert(input_data != NULL);
+    assert(length > 0);
+
     uint8_t crc8_result = 0;
-    crc8_result = crc8_calculate(param, input_data, length - 1);
+    crc8_result = crc8_calculate(model, input_data, length - 1);
     *(input_data + length - 1) = crc8_result & 0xFF;
 }
 
@@ -156,6 +153,11 @@ void crc8_calculate_package(const crc8_param_t *param, uint8_t *input_data, size
  * @param length Length of the CRC8 packet
  */
 void crc8_lookup_table_package(CRC8_reference_model_e model, uint8_t *input_data, size_t length) {
+    /* parameter checkout */
+    assert(model == CRC8_MODEL || model == CRC8_MAXIM_MODEL);
+    assert(input_data != NULL);
+    assert(length > 0);
+
     uint8_t crc8_result = 0;
     uint8_t *p = input_data;
     if (p != NULL) {
@@ -164,18 +166,6 @@ void crc8_lookup_table_package(CRC8_reference_model_e model, uint8_t *input_data
         case CRC8_MODEL:
             for (size_t i = 0; i < length - 1; i++) {
                 crc8_result = CRC8_8BIT_TABLE[(crc8_result ^ (*p++)) & 0xFF];
-            }
-            break;
-
-        case CRC8_ITU_MODEL:
-            for (size_t i = 0; i < length - 1; i++) {
-                crc8_result = CRC8_8BIT_ITU_TABLE[(crc8_result ^ (*p++)) & 0xFF];
-            }
-            break;
-
-        case CRC8_ROHC_MODEL:
-            for (size_t i = 0; i < length - 1; i++) {
-                crc8_result = CRC8_8BIT_ROHC_TABLE[(crc8_result ^ (*p++)) & 0xFF];
             }
             break;
 
@@ -202,9 +192,14 @@ void crc8_lookup_table_package(CRC8_reference_model_e model, uint8_t *input_data
  * @return true CRC8 checks succeed
  * @return false CRC8 checks fails
  */
-bool crc8_package_check(const crc8_param_t *param, uint8_t *input_data, size_t length) {
+bool crc8_package_check(CRC8_reference_model_e model, uint8_t *input_data, size_t length) {
+    /* parameter checkout */
+    assert(model < CRC8_NONE_MODEL);
+    assert(input_data != NULL);
+    assert(length > 0);
+
     uint8_t crc8_result = 0;
-    crc8_result = crc8_calculate(param, input_data, length - 1);
+    crc8_result = crc8_calculate(model, input_data, length - 1);
     if (crc8_result != *(input_data + length - 1)) {
         return false;
     }
@@ -221,6 +216,10 @@ bool crc8_package_check(const crc8_param_t *param, uint8_t *input_data, size_t l
  * @return false CRC8 checks fails
  */
 bool crc8_lookup_table_package_check(CRC8_reference_model_e model, uint8_t *input_data, size_t length) {
+    assert(model == CRC8_MODEL || model == CRC8_MAXIM_MODEL);
+    assert(input_data != NULL);
+    assert(length > 0);
+
     uint8_t crc8_result = 0;
     uint8_t *p = input_data;
     switch (model)
@@ -228,18 +227,6 @@ bool crc8_lookup_table_package_check(CRC8_reference_model_e model, uint8_t *inpu
     case CRC8_MODEL:
         for (size_t i = 0; i < length - 1; i++) {
             crc8_result = CRC8_8BIT_TABLE[crc8_result ^ *p++];
-        }
-        break;
-
-    case CRC8_ITU_MODEL:
-        for (size_t i = 0; i < length - 1; i++) {
-            crc8_result = CRC8_8BIT_ITU_TABLE[crc8_result ^ *p++];
-        }
-        break;
-
-    case CRC8_ROHC_MODEL:
-        for (size_t i = 0; i < length - 1; i++) {
-            crc8_result = CRC8_8BIT_ROHC_TABLE[crc8_result ^ *p++];
         }
         break;
 
@@ -268,10 +255,9 @@ int main() {
 /* test: crc8_calculate  */
 #if 0
     uint8_t crc8_result;
-    uint8_t input_data[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // crc8 result: 0x3e
+    uint8_t input_data0[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // crc8 result: 0x3e
 
-    crc8_param_t param = CRC8;
-    crc8_result  = crc8_calculate(&param, input_data, 1);
+    crc8_result  = crc8_calculate(CRC8_MODEL, input_data0, 1);
     printf("crc8_result: 0x%x\n", crc8_result);
 #endif
 
@@ -283,45 +269,41 @@ int main() {
 #endif
 
 /* test crc8_calculate_package crc8_package_check */
-#if 1
+#if 0
     printf("---------CRC8 calculation method-----------\n");
-    crc8_param_t param1 = CRC8;
-    crc8_param_t param2 = CRC8_ITU;
-    crc8_param_t param3 = CRC8_ROHC;
-    crc8_param_t param4 = CRC8_MAXIM;
     bool check_result;
     uint8_t input_data[9] = {0x01, 0x02, 0x03, 0x04, 0x08, 0x07, 0x06, 0x05};
 
-    crc8_calculate_package(&param1, input_data, 9);
+    crc8_calculate_package(CRC8_MODEL, input_data, 9);
     printf("CRC8_MODE result: 0x%02x \n", input_data[8]);
-    check_result = crc8_package_check(&param1, input_data, 9);
+    check_result = crc8_package_check(CRC8_MODEL, input_data, 9);
     if (check_result) {
         printf("CRC8_MODEL check succeed!\n");
     } else {
         printf("CRC8_MODEL check fails!\n");
     }
 
-    crc8_calculate_package(&param2, input_data, 9);
+    crc8_calculate_package(CRC8_ITU_MODEL, input_data, 9);
     printf("CRC8_ITU_MODEL result: 0x%02x \n", input_data[8]);
-    check_result = crc8_package_check(&param2, input_data, 9);
+    check_result = crc8_package_check(CRC8_ITU_MODEL, input_data, 9);
     if (check_result) {
         printf("CRC8_ITU_MODEL check succeed!\n");
     } else {
         printf("CRC8_ITU_MODEL check fails!\n");
     }
 
-    crc8_calculate_package(&param3, input_data, 9);
+    crc8_calculate_package(CRC8_ROHC_MODEL, input_data, 9);
     printf("CRC8_ROHC_MODEL result: 0x%02x \n", input_data[8]);
-    check_result = crc8_package_check(&param3, input_data, 9);
+    check_result = crc8_package_check(CRC8_ROHC_MODEL, input_data, 9);
     if (check_result) {
         printf("CRC8_ROHC_MODEL check succeed!\n");
     } else {
         printf("CRC8_ROHC_MODEL check fails!\n");
     }
 
-    crc8_calculate_package(&param4, input_data, 9);
+    crc8_calculate_package(CRC8_MAXIM_MODEL, input_data, 9);
     printf("CRC8_MAXIM_MODEL result: 0x%02x \n", input_data[8]);
-    check_result = crc8_package_check(&param4, input_data, 9);
+    check_result = crc8_package_check(CRC8_MAXIM_MODEL, input_data, 9);
     if (check_result) {
         printf("CRC8_MAXIM_MODEL check succeed!\n");
     } else {
@@ -329,7 +311,7 @@ int main() {
     }
 #endif
 
-#if 1
+#if 0
     printf("---------CRC8 lookup table-----------\n");
     bool check_result2;
     uint8_t input_data2[9] = {0x01, 0x02, 0x03, 0x04, 0x08, 0x07, 0x06, 0x05};
@@ -341,24 +323,6 @@ int main() {
         printf("CRC8_MODEL check succeed!\n");
     } else {
         printf("CRC8_MODEL check fails!\n");
-    }
-
-    crc8_lookup_table_package(CRC8_ITU_MODEL, input_data2, 9);
-    printf("CRC8_ITU_MODEL result: 0x%02x \n", input_data2[8]);
-    check_result2 = crc8_lookup_table_package_check(CRC8_ITU_MODEL, input_data2, 9);
-    if (check_result2) {
-        printf("CRC8_ITU_MODEL check succeed!\n");
-    } else {
-        printf("CRC8_ITU_MODEL check fails!\n");
-    }
-
-    crc8_lookup_table_package(CRC8_ROHC_MODEL, input_data2, 9);
-    printf("CRC8_ROHC_MODEL result: 0x%02x \n", input_data2[8]);
-    check_result2 = crc8_lookup_table_package_check(CRC8_ROHC_MODEL, input_data2, 9);
-    if (check_result2) {
-        printf("CRC8_ROHC_MODEL check succeed!\n");
-    } else {
-        printf("CRC8_ROHC_MODEL check fails!\n");
     }
 
     crc8_lookup_table_package(CRC8_MAXIM_MODEL, input_data2, 9);
@@ -376,42 +340,21 @@ int main() {
 static void print_crc8_table(CRC8_reference_model_e model) {
     uint8_t crc8_result = 0;
     uint8_t i = 0;
-    crc8_param_t param;
     switch (model)
     {
     case CRC8_MODEL:
-        param.initial_value = 0x00;
-        param.result_xor_value = 0x00;
-        param.polynomial = 0x07;
-        param.input_inversion = false;
-        param.output_inversion = false;
         printf("const uint8_t CRC8_8BIT_TABLE[] = {\n");
         break;
 
     case CRC8_ITU_MODEL:
-        param.initial_value = 0x00;
-        param.result_xor_value = 0x55;
-        param.polynomial = 0x07;
-        param.input_inversion = false;
-        param.output_inversion = false;
         printf("const uint8_t CRC8_8BIT_ITU_TABLE[] = {\n");
         break;
 
     case CRC8_ROHC_MODEL:
-        param.initial_value = 0xFF;
-        param.result_xor_value = 0x00;
-        param.polynomial = 0x07;
-        param.input_inversion = true;
-        param.output_inversion = true;
         printf("const uint8_t CRC8_8BIT_ROHC_TABLE[] = {\n");
         break;
 
     case CRC8_MAXIM_MODEL:
-        param.initial_value = 0x00;
-        param.result_xor_value = 0x00;
-        param.polynomial = 0x31;
-        param.input_inversion = true;
-        param.output_inversion = true;
         printf("const uint8_t CRC8_8BIT_MAXIM_TABLE[] = {\n");
         break;
 
@@ -419,7 +362,7 @@ static void print_crc8_table(CRC8_reference_model_e model) {
         break;
     }
     for (int j = 0; j <= 0xFF; j++, i++) {
-        crc8_result = crc8_calculate(&param, &i, 1);
+        crc8_result = crc8_calculate(model, &i, 1);
         if (i % 16 == 0) {
             printf("    ");
         } else {
