@@ -379,41 +379,73 @@ void crc16_lookup_table_package(CRC16_reference_model_e model, uint8_t *input_da
         case CRC16_IBM_MODEL:
             crc16_result = crc16_param[model].initial_value;
             for (size_t i = 0; i < length - 2; i++) {
-               
+                crc16_result = (crc16_result >> 8) ^ CRC16_IBM_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
             }
             crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_MAXIM_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_MAXIM_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_USB_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_USB_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_MODBUS_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_MODBUS_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_CCITT_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_CCITT_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_CCITT_FALSE_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result << 8) ^ CRC16_CCITT_FALSE_MODEL_TABLE[((crc16_result >> 8) ^ (*p++))];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_X25_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_X25_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_XMODEM_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result << 8) ^ CRC16_XMODEM_MODEL_TABLE[((crc16_result >> 8) ^ (*p++))];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         case CRC16_DNP_MODEL:
-
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_DNP_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
             break;
 
         default:
@@ -468,26 +500,89 @@ bool crc16_lookup_table_package_check(CRC16_reference_model_e model, uint8_t *in
     assert(length > 0);
 
     uint16_t crc16_result = 0;
+    uint16_t crc16_actual_value = ((uint16_t)(*(input_data + length - 1) << 8) | (*(input_data + length - 2)));
     uint8_t *p = input_data;
     switch (model)
     {
     case CRC16_IBM_MODEL:
-        for (size_t i = 0; i < length - 1; i++) {
-
-        }
-        break;
+            crc16_result = crc16_param[model].initial_value;
+            for (size_t i = 0; i < length - 2; i++) {
+                crc16_result = (crc16_result >> 8) ^ CRC16_IBM_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+            }
+            crc16_result ^= crc16_param[model].result_xor_value;
+            break;
 
     case CRC16_MAXIM_MODEL:
-        for (size_t i = 0; i < length - 1; i++) {
-
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_MAXIM_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
         }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_USB_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_USB_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_MODBUS_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_MODBUS_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_CCITT_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_CCITT_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_CCITT_FALSE_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result << 8) ^ CRC16_CCITT_FALSE_MODEL_TABLE[((crc16_result >> 8) ^ (*p++))];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_X25_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_X25_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_XMODEM_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result << 8) ^ CRC16_XMODEM_MODEL_TABLE[((crc16_result >> 8) ^ (*p++))];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
+
+    case CRC16_DNP_MODEL:
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_DNP_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
         break;
 
     default:
         break;
     }
 
-
+    if (crc16_result != crc16_actual_value) {
+        return false;
+    }
     return true;
 }
 
@@ -657,9 +752,97 @@ int main() {
 
 #if 1
     uint16_t crc16_result = 0;
+    bool crc16_check_result = false;
+
     crc16_lookup_table_package(CRC16_IBM_MODEL, input_data, 12);
     crc16_result = input_data[11] << 8 | input_data[10];
     printf("crc16_lookup_table_package CRC16_IBM_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_IBM_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_IBM_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_IBM_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_MAXIM_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_MAXIM_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_MAXIM_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_MAXIM_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_MAXIM_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_USB_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_USB_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_USB_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_USB_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_USB_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_MODBUS_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_MODBUS_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_MODBUS_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_MODBUS_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_MODBUS_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_CCITT_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_CCITT_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_CCITT_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_CCITT_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_CCITT_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_CCITT_FALSE_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_CCITT_FALSE_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_CCITT_FALSE_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_CCITT_FALSE_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_CCITT_FALSE_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_X25_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_X25_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_X25_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_X25_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_X25_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_XMODEM_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_XMODEM_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_XMODEM_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_XMODEM_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_XMODEM_MODEL check fail.\n");
+    }
+
+    crc16_lookup_table_package(CRC16_DNP_MODEL, input_data, 12);
+    crc16_result = input_data[11] << 8 | input_data[10];
+    printf("crc16_lookup_table_package CRC16_DNP_MODEL result = 0x%04x\n", crc16_result);
+    crc16_check_result = crc16_lookup_table_package_check(CRC16_DNP_MODEL, input_data, 12);
+    if (crc16_check_result) {
+        printf("crc16_calculate_package CRC16_DNP_MODEL check succeed.\n");
+    } else {
+        printf("crc16_calculate_package CRC16_DNP_MODEL check fail.\n");
+    }
 #endif
     return 0;
 }
