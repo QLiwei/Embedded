@@ -198,7 +198,7 @@ uint8_t crc8_calculate_mirror_mode(CRC8_reference_model_e model, uint8_t *input_
         }
         crc8 ^= data;
         for (uint8_t j = 0; j < 8; j++) {
-            if (crc8 & 0x0001) {
+            if (crc8 & 0x01) {
                 crc8 >>= 1;
                 crc8 ^= polynomial; //  polynomial discard MSB or LSB because they are always 1, don't need to compute
             } else {
