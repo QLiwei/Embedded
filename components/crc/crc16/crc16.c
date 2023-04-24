@@ -505,12 +505,12 @@ bool crc16_lookup_table_package_check(CRC16_reference_model_e model, uint8_t *in
     switch (model)
     {
     case CRC16_IBM_MODEL:
-            crc16_result = crc16_param[model].initial_value;
-            for (size_t i = 0; i < length - 2; i++) {
-                crc16_result = (crc16_result >> 8) ^ CRC16_IBM_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
-            }
-            crc16_result ^= crc16_param[model].result_xor_value;
-            break;
+        crc16_result = crc16_param[model].initial_value;
+        for (size_t i = 0; i < length - 2; i++) {
+            crc16_result = (crc16_result >> 8) ^ CRC16_IBM_MODEL_TABLE[(crc16_result ^ *p++) & 0xFF];
+        }
+        crc16_result ^= crc16_param[model].result_xor_value;
+        break;
 
     case CRC16_MAXIM_MODEL:
         crc16_result = crc16_param[model].initial_value;
