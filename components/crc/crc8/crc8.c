@@ -229,7 +229,11 @@ void crc8_calculate_package(CRC8_reference_model_e model, uint8_t *input_data, s
     assert(length > 0);
 
     uint8_t crc8_result = 0;
-    crc8_result = crc8_calculate(model, input_data, length - 1);
+    if (crc8_param[model].input_inversion == true && crc8_param[model].output_inversion == true) {
+        crc8_result = crc8_calculate_mirror_mode(model, input_data, length - 1);
+    } else {
+        crc8_result = crc8_calculate(model, input_data, length - 1);
+    }
     *(input_data + length - 1) = crc8_result & 0xFF;
 }
 
@@ -418,7 +422,7 @@ int main() {
 #endif
 
 /* test crc8_calculate_package crc8_package_check */
-#if 0
+#if 1
     printf("---------CRC8 calculation method-----------\n");
     bool check_result;
     uint8_t input_data[9] = {0x01, 0x02, 0x03, 0x05, 0x08, 0x07, 0x06, 0x05};
@@ -460,7 +464,7 @@ int main() {
     }
 #endif
 
-#if 0
+#if 1
     printf("---------CRC8 lookup table-----------\n");
     bool check_result2;
     uint8_t input_data2[9] = {0x01, 0x02, 0x03, 0x05, 0x08, 0x07, 0x06, 0x05};
