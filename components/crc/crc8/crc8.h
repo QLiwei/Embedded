@@ -17,6 +17,7 @@ typedef enum {
 }CRC8_reference_model_e;
 
 uint8_t crc8_calculate(CRC8_reference_model_e model, uint8_t *input_data, size_t length);
+uint8_t crc8_calculate_mirror_mode(CRC8_reference_model_e model, uint8_t *input_data, size_t length);
 void crc8_calculate_package(CRC8_reference_model_e model, uint8_t *input_data, size_t length);
 void crc8_lookup_table_package(CRC8_reference_model_e model, uint8_t *input_data, size_t length);
 bool crc8_package_check(CRC8_reference_model_e model, uint8_t *input_data, size_t length);

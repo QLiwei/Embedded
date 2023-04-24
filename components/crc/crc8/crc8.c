@@ -174,6 +174,48 @@ uint8_t crc8_calculate(CRC8_reference_model_e model, uint8_t *input_data, size_t
 }
 
 /**
+ * @brief The mirror mode computes the 8-bit wide CRC of the input data of a given length.
+ *
+ * @param param CRC8 reference model
+ * @param input_data Input uint8 t type array data
+ * @param length Input uint8 t type array length
+ * @return uint8_t CRC8 result
+ */
+uint8_t crc8_calculate_mirror_mode(CRC8_reference_model_e model, uint8_t *input_data, size_t length) {
+    /* parameter checkout */
+    assert(model < CRC8_NONE_MODEL);
+    assert(input_data != NULL);
+    assert(length > 0);
+
+    uint8_t crc8 = crc8_param[model].initial_value;
+    uint8_t polynomial = data_inversion(crc8_param[model].polynomial);
+    uint8_t data;
+
+    for (size_t i = 0; i < length; i++) {
+        data = *input_data++;
+        if (!crc8_param[model].input_inversion) {
+            data = data_inversion(data);
+        }
+        crc8 ^= data;
+        for (uint8_t j = 0; j < 8; j++) {
+            if (crc8 & 0x0001) {
+                crc8 >>= 1;
+                crc8 ^= polynomial; //  polynomial discard MSB or LSB because they are always 1, don't need to compute
+            } else {
+                crc8 >>= 1;
+            }
+
+        }
+    }
+
+    if (!crc8_param[model].output_inversion) {
+        crc8 = data_inversion(crc8);
+    }
+
+    return (crc8 ^ crc8_param[model].result_xor_value);
+}
+
+/**
  * @brief CRC8 calculation method group package
  *
  * @param param CRC8 reference model
@@ -341,10 +383,31 @@ int main() {
 /* test: crc8_calculate  */
 #if 0
     uint8_t crc8_result;
-    uint8_t input_data0[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // crc8 result: 0x3e
+    uint8_t input_data0[8] = {0x03, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08}; // crc8 result: 0x3e
 
     crc8_result  = crc8_calculate(CRC8_MODEL, input_data0, 1);
-    printf("crc8_result: 0x%x\n", crc8_result);
+    printf("CRC8_MODEL crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate_mirror_mode(CRC8_MODEL, input_data0, 1);
+    printf("CRC8_MODEL mirror mode crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate(CRC8_ITU_MODEL, input_data0, 1);
+    printf("CRC8_ITU_MODEL crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate_mirror_mode(CRC8_ITU_MODEL, input_data0, 1);
+    printf("CRC8_ITU_MODEL mirror mode crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate(CRC8_ROHC_MODEL, input_data0, 1);
+    printf("CRC8_ROHC_MODEL crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate_mirror_mode(CRC8_ROHC_MODEL, input_data0, 1);
+    printf("CRC8_ROHC_MODEL mirror mode crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate(CRC8_MAXIM_MODEL, input_data0, 1);
+    printf("CRC8_MAXIM_MODEL crc8_result: 0x%x\n", crc8_result);
+
+    crc8_result  = crc8_calculate_mirror_mode(CRC8_MAXIM_MODEL, input_data0, 1);
+    printf("CRC8_MAXIM_MODEL mirror mode crc8_result: 0x%x\n", crc8_result);
 #endif
 
 #if 0 /* printf crc8 8bit table */
@@ -355,7 +418,7 @@ int main() {
 #endif
 
 /* test crc8_calculate_package crc8_package_check */
-#if 1
+#if 0
     printf("---------CRC8 calculation method-----------\n");
     bool check_result;
     uint8_t input_data[9] = {0x01, 0x02, 0x03, 0x05, 0x08, 0x07, 0x06, 0x05};
@@ -397,7 +460,7 @@ int main() {
     }
 #endif
 
-#if 1
+#if 0
     printf("---------CRC8 lookup table-----------\n");
     bool check_result2;
     uint8_t input_data2[9] = {0x01, 0x02, 0x03, 0x05, 0x08, 0x07, 0x06, 0x05};
