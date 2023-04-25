@@ -47,10 +47,10 @@ extern "C" {
 
 /* Data structure for MD5 (Message Digest) computation */
 typedef struct {
-  uint32_t i[2];                   /* number of _bits_ handled mod 2^64 */
-  uint32_t buf[4];                                    /* scratch buffer */
-  uint8_t in[64];                              /* input buffer */
-  uint8_t digest[16];     /* actual digest after MD5Final call */
+  uint32_t i[2];        /* number of _bits_ handled mod 2^64 */
+  uint32_t buf[4];      /* scratch buffer */
+  uint8_t in[64];       /* input buffer */
+  uint8_t digest[16];   /* actual digest after MD5Final call */
 } md5_ctx;
 
 void md5_init(md5_ctx *ctx);

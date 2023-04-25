@@ -163,17 +163,14 @@ void md5_final(md5_ctx *ctx)
                 (((uint32_t)ctx->in[ii+1]) << 8) |
                 ((uint32_t)ctx->in[ii]);
     }
-    trans_form (ctx->buf, in);
+    trans_form(ctx->buf, in);
 
     /* store buffer in digest */
     for (i = 0, ii = 0; i < 4; i++, ii += 4) {
         ctx->digest[ii] = (uint8_t)(ctx->buf[i] & 0xFF);
-        ctx->digest[ii+1] =
-            (uint8_t)((ctx->buf[i] >> 8) & 0xFF);
-        ctx->digest[ii+2] =
-            (uint8_t)((ctx->buf[i] >> 16) & 0xFF);
-        ctx->digest[ii+3] =
-            (uint8_t)((ctx->buf[i] >> 24) & 0xFF);
+        ctx->digest[ii+1] = (uint8_t)((ctx->buf[i] >> 8) & 0xFF);
+        ctx->digest[ii+2] = (uint8_t)((ctx->buf[i] >> 16) & 0xFF);
+        ctx->digest[ii+3] = (uint8_t)((ctx->buf[i] >> 24) & 0xFF);
     }
 }
 
